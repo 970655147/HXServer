@@ -4,13 +4,16 @@
  * created by 970655147
  */
 
-package com.hx.core;
+package com.hx.interf;
 
+import com.hx.core.Request;
+import com.hx.core.Response;
 import com.hx.util.Tools;
 
+// servlet 接口
 public abstract class Servlet {
 	
-	// service
+	// service  控制路由
 	public void service(Request req, Response resp) {
 		if(Tools.equalsIgnoreCase(req.getMethod(), Request.GET) ) {
 			doGet(req, resp);

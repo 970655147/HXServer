@@ -6,7 +6,9 @@
 
 package com.hx.core;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.LinkedHashMap;
@@ -21,7 +23,8 @@ import com.hx.util.Tools;
 // 响应
 public class Response {
 
-	// printWriter
+	// printWriter 向缓存中写数据, 缓存响应内容, 状态行
+	// 响应头, 客户端的socket
 	private PrintWriter out;
 	private ByteArrayOutputStream buff;
 	private StatusLine statusLine;
@@ -42,16 +45,20 @@ public class Response {
 
 	}
 	
+	// 向客户端的socket写出数据 [状态行, 响应头, 响应内容]
+	// 请使用字节流, 否则媒体文件传输不了的
 	public void writeResponse() throws Exception {
-		PrintWriter respOut = new PrintWriter(clientSocket.getOutputStream() );
-		respOut.println(statusLine.toStatusLineString() );
-		respOut.println(Tools.getHeaderString(responseHeader) );
+		BufferedOutputStream br = new BufferedOutputStream(clientSocket.getOutputStream() );
+		br.write(statusLine.toStatusLineString().getBytes() );
+		br.write(Tools.CRLF.getBytes() );
+		br.write(Tools.getHeaderString(responseHeader).getBytes() );
+		br.write(Tools.CRLF.getBytes() );
 
 		out.flush();
 		out.close();
-		respOut.println(buff.toString() );
-		respOut.flush();
-		respOut.close();
+		br.write(buff.toByteArray() );
+		br.flush();
+		br.close();
 		clientSocket.close();
 	}
 	
@@ -61,6 +68,9 @@ public class Response {
 	}
 	public void addHeader(String key, String val) {
 		responseHeader.put(key, val);
+	}
+	public OutputStream getOutputStream() {
+		return buff;
 	}
 	
 	// 获取reponse

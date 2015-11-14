@@ -11,6 +11,7 @@ import net.sf.json.JSONObject;
 import com.hx.util.Tools;
 
 // 状态行
+// HTTP/1.1 200 OK
 public class StatusLine {
 
 	// 协议, 响应码, 状态
@@ -30,6 +31,7 @@ public class StatusLine {
 	}
 
 	// 获取状态行字符串
+		// 以空格分割protocol, code, status
 	public String toStatusLineString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(protocol); sb.append(Tools.SPACE);

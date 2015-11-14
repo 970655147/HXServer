@@ -23,16 +23,15 @@ public class LogLifeCycleListener implements LifeCycleListener {
 		this.object = object;
 	}
 
+	// Override from LifeCycleListener
 	@Override
 	public void beforeStart() {
 		Tools.log(this, "'" + object + "' starting !");
 	}
-
 	@Override
 	public void postStop() {
 		Tools.log(this, "'" + object + "' stopped !");
 	}
-	
 	@Override
 	public LifeCycleListener copy(String arg) {
 		return new LogLifeCycleListener(arg);

@@ -6,71 +6,62 @@
 
 package com.hx.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.net.URLStreamHandler;
+import java.util.List;
 
 import com.hx.interf.ContainerBase;
+import com.hx.interf.Servlet;
 import com.hx.util.Tools;
 
+// 对于一个Servlet的封装
 public class ActionWrapper extends ContainerBase {
 
-	// servlet的path
+	// servlet的path, 当前wrapper对应的servlet对象
+	// 当前wrapper对应的filterChain
 	private String actionPath;
 	private Servlet servlet;
+	private FilterChain filterChain;
 	
 	// 初始化
-	public ActionWrapper() {
+	public ActionWrapper(ContainerBase parent, String contextPath, String servletName) {
+		this.parent = parent;
+		actionPath = contextPath + Tools.INV_SLASH + servletName.replace(Tools.DOT, Tools.INV_SLASH);
+		servlet = (Servlet) Tools.getInstance(contextPath, servletName);
 		
-	}
-	public ActionWrapper(String contextPath, String path) {
-		actionPath = contextPath + Tools.INV_SLASH + path.replace(Tools.DOT, Tools.INV_SLASH);
-		initServlet(contextPath, path);
+		init(servletName);
 	}
 	
-	// 初始化servlet
-	public void initServlet(String contextPath, String path) {
-        URLClassLoader loader = null; 
-        try { 
-            // create a URLClassLoader 
-            URL[] urls = new URL[1]; 
-            URLStreamHandler streamHandler = null; 
-            String repository =(new URL("file", "", new File(contextPath).getCanonicalPath() + Tools.INV_SLASH) ).toString() ; 
-            urls[0] = new URL(null, repository, streamHandler); 
-            loader = new URLClassLoader(urls); 
-        } catch (IOException e) { 
-        	Tools.err(this, "error while init servlet !");
-            e.printStackTrace();
-        } 
-        
-        try {
-			Class servletClass = loader.loadClass(path);
-			servlet = (Servlet) servletClass.getConstructor().newInstance();
-		} catch (Exception e) {
-			Tools.err(this, "error while instance servlet !");
-			e.printStackTrace();
+	// 初始化
+		// 创建filterChain, 并添加当前servlet所有的filter
+	private void init(String servletName) {
+		filterChain = new FilterChain(servlet);
+		Context context = (Context) parent;
+		List<String> filters = context.getFiltersForServlet(servletName);
+		if(filters != null) {
+			for(String filter : filters) {
+				filterChain.addFilter(context.getFilterForFilterName(filter) );
+			}
 		}
 	}
 
+	// 业务 [过滤之后处理业务]
+	public void service(Request req, Response resp) {
+		filterChain.doFilter(req, resp);
+	}
+	
+	// Override form LifeCycleBase
 	@Override
 	public void startInternal() {
 		
 	}
-
 	@Override
 	public void stopInternal() {
 		
 	}
 	
+	// Override form ContainerBase
 	@Override
 	public String getContainerName() {
 		return "actionWrapper : " + Tools.getFileName(actionPath, Tools.INV_SLASH);
-	}
-	
-	public void service(Request req, Response resp) {
-		servlet.service(req, resp);
 	}
 
 }

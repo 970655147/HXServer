@@ -6,12 +6,19 @@
 
 package com.hx.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
@@ -20,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import net.sf.json.JSONObject;
 
@@ -48,13 +56,14 @@ public class Tools {
 	public static final Character QUESTION = '?';
 	public static final String CRLF = "\r\n";
 	public static Random ran = new Random();
-	public static String DEFAULT_CHARSET = "utf-8";
+	public static String DEFAULT_CHARSET = "gbk";
 	
 	// http相关常量
 	public static final String COOKIE_STR = "Cookie";
 	public static final String RESP_COOKIE_STR = "Set-Cookie";
 	public static final String CONTENT_TYPE = "Content-Type";
 	public static final String CONTENT_ENCODING = "Content-Encoding";
+	public static final String CONTENT_LENGTH = "Content-Length";
 	public static final String ACCEPT = "Accept";
 	public static final String ACCEPT_ENCODING = "Accept-Encoding";
 	public static final String ACCEPT_LANGUAGE = "Accept-Language";
@@ -77,6 +86,7 @@ public class Tools {
 	public static String JPEG = ".jpeg";
 	public static String JS = ".js";
 	public static String MAP = ".map";
+	public static String ICO = ".ico";
 	
 	// 如果字符串为一下字符串, 将其视为空字符串
 	static Set<String> emptyStrCondition = new HashSet<>();
@@ -171,66 +181,6 @@ public class Tools {
 		return getContent(file, DEFAULT_CHARSET);
 	}
 	
-	// 文件路径
-	// 映射规则  webPath -> filePath
-	// /c/programFiles  => c:/programFiles
-		// 解析Path
-	public static String getFilePathByWebPath(String webPath) {
-		String path = null;
-		int idx = 1;
-		int diskNameIdx = webPath.indexOf(Tools.INV_SLASH, idx);
-		
-		if(diskNameIdx < 0) {
-			if(webPath.length() == 2) {
-				StringBuilder sb = new StringBuilder(webPath.length() );
-				sb.append(webPath.charAt(1) );
-				sb.append(Tools.COLON);				
-				sb.append(Tools.INV_SLASH);
-				path = sb.toString();
-			} else {
-				path = "/";
-			}
-		} else {
-			StringBuilder sb = new StringBuilder(webPath.length() );
-			sb.append(webPath.substring(0, diskNameIdx) );
-			sb.append(Tools.COLON);
-			sb.append(webPath.substring(diskNameIdx) );
-			if(sb.charAt(sb.length()-1) != Tools.INV_SLASH) {
-				sb.append(Tools.INV_SLASH);
-			}
-			path = sb.toString();
-		}
-		
-		return path;
-	}
-	// 映射规则  filePath -> webPath 
-	public static String getWebPathByFilePath(String path) {
-		int colonIdx = path.indexOf(Tools.COLON);
-		if(colonIdx > 0) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(path.substring(0, colonIdx) );
-			sb.append(path.substring(colonIdx + 1) );
-			return sb.toString();
-		} 
-		
-		return path;
-	}
-	
-	// 获取 父 / 孩子 文件的路径
-	public static String getChildFilePath(String parent, String childFile) {
-		return getWebPathByFilePath(parent) + childFile;
-//		return childFile;
-	}
-	public static String getParentFilePath(String parent) {
-		String webPath = getWebPathByFilePath(parent);
-		int endIdx = webPath.lastIndexOf(Tools.INV_SLASH, webPath.length()-2);
-		if(endIdx > 0) {
-			return webPath.substring(0, endIdx+1);
-		} else {
-			return parent.charAt(0) + "/";
-		}
-	}	
-	
 	// 获取响应头字符串根据给定的Map
 	public static String getHeaderString(Map<String, String> headers) {
 		StringBuilder sb = new StringBuilder();
@@ -265,20 +215,6 @@ public class Tools {
 			obj.put(key, valObj.toString());
 		}
 	}	
-	
-	// 获取给定文件的前缀
-	public static String getFileName(File file) {
-		StringBuilder sb = new StringBuilder();
-		if(file.isDirectory() ) {
-			sb.append("[dir]");
-		} else {
-			sb.append("[file]");
-		}
-		
-		sb.append(Tools.SPACE);
-		sb.append(file.getName());
-		return sb.toString();
-	}
 	
 	// 获取指定路径的文件的文件, 通过sep分割的文件名     获取文件名
 	// 解析? 的位置, 是为了防止一下情况
@@ -318,7 +254,109 @@ public class Tools {
 		StaticResourceLoader.load(host, req, resp);
 	}
 	
+	// 创建一个(contextPath, path), 对应对象的实例
+	public static Object getInstance(String contextPath, String path) {
+        URLClassLoader loader = null; 
+        try { 
+            // create a URLClassLoader 
+            URL[] urls = new URL[1]; 
+            URLStreamHandler streamHandler = null; 
+            String repository =(new URL("file", "", new File(contextPath).getCanonicalPath() + Tools.INV_SLASH) ).toString() ; 
+            urls[0] = new URL(null, repository, streamHandler); 
+            loader = new URLClassLoader(urls); 
+        } catch (IOException e) { 
+        	Tools.err(Tools.class, "error while init servlet !");
+            e.printStackTrace();
+        } 
+        
+        Object ins = null;
+        try {
+			Class servletClass = loader.loadClass(path);
+			ins = servletClass.getConstructor().newInstance();
+		} catch (Exception e) {
+			Tools.err(Tools.class, "error while instance servlet !");
+			e.printStackTrace();
+		}
+        
+        return ins;
+	}
 	
+	// 等待所有任务的结束  然后shutdown线程池
+	public static void awaitShutdown(ThreadPoolExecutor threadPool) {
+		while (! threadPool.isShutdown() ) {
+			int acitveTaskCount = threadPool.getActiveCount();
+			
+			if(acitveTaskCount == 0) {
+				threadPool.shutdown();
+			} else {
+				Tools.sleep(Constants.THREAD_POOL_CHECK_INTERVAL);
+			}
+		}
+	}
+	
+	// 获取shutdownUrl
+	public static String getShutdownUrl(int port) {
+		return "http://localhost:" + port + "/web/shutdown";
+	}
+	
+	// 访问对应的url
+	// 访问一下Connection.inputStream  才能发出请求 !
+	public static void visit(String urlStr) {
+		try {
+			URL url = new URL(urlStr);
+			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			// 访问一下Connection.inputStream  才能发出请求
+			String respContent = Tools.getContent(con.getInputStream() );
+		} catch (IOException e) {
+			Tools.log(Tools.class, "error while visit : " + urlStr);
+			e.printStackTrace();
+		}
+	}
+	
+	// 校验request
+	public static boolean validateRequest(Request req) {
+		if(req.getPath().contains("..") || req.getRequestLineStr().contains("..") ) {
+			Tools.err(Tools.class, "receive a request with '..' " + req.toString() );
+			return false;
+		}
+		
+		return true;
+	}
+	
+	// 将输入流中的数据 复制到输出流
+	public static void copy(InputStream is, OutputStream os, boolean isCloseStream) {
+		BufferedInputStream bis = null;
+		BufferedOutputStream bos = null;
+		
+		try {
+			bis = new BufferedInputStream(is);
+			bos = new BufferedOutputStream(os);
+			int len = 0;
+			byte[] buf = new byte[Constants.BUFF_SIZE];
+			while((len = bis.read(buf)) != -1) {
+				bos.write(buf, 0, len);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if(isCloseStream) {
+				if(bos != null) {
+					try {
+						bos.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				if(bis != null) {
+					try {
+						bis.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	}
 	
 }
 

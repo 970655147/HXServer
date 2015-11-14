@@ -1,4 +1,22 @@
 {
-	"fileBroseAction" : "com.hx.action.FileBroseServlet",
-	"helloWorldAction" : "com.hx.action.HelloWorldServlet"
+	"fileBroseAction" : {
+		"classPath" : "com.hx.action.FileBroseServlet"
+	},
+	
+	"helloWorldAction" : {
+		"classPath" : "com.hx.action.HelloWorldServlet"
+	},
+	
+	"calcAction" : {
+		"classPath" : "com.hx.action.CalcServlet",
+		"filters" : [
+			"com.hx.ext.IpFilter",
+			"com.hx.ext.LogFilter"
+		]
+	},
+	
+	"fileUploadAction" : {
+		"classPath" : "com.hx.action.FileUploadServlet"
+	},
+
 }

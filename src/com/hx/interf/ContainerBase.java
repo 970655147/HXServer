@@ -9,9 +9,11 @@ package com.hx.interf;
 import java.util.Map;
 import java.util.Map.Entry;
 
+// 容器类对象的基类
 public abstract class ContainerBase extends LifeCycleBase {
 	
-	// childs
+	// 父容器, 子容器
+	protected ContainerBase parent = null;
 	protected Map<String, ContainerBase> childs = null;
 	
 	// 获取给定的名称的子容器

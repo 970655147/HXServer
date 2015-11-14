@@ -6,8 +6,10 @@
 
 package com.hx.core;
 
+import com.hx.interf.Servlet;
 import com.hx.util.Tools;
 
+// Servlet 的基本实现
 public class HttpServlet extends Servlet {
 
 	@Override

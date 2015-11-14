@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import com.hx.interf.LifeCycleBase;
 import com.hx.util.Constants;
+import com.hx.util.Tools;
 
 public final class Connector extends LifeCycleBase {
 
@@ -23,6 +24,7 @@ public final class Connector extends LifeCycleBase {
 	private Server server;
 	private ThreadPoolExecutor threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(Constants.threadNums);	
 	
+	// 初始化
 	public Connector(int listenPort, Server server) {
 		this.listenPort = listenPort;
 		this.server = server;
@@ -33,11 +35,7 @@ public final class Connector extends LifeCycleBase {
 		}
 	}
 
-	@Override
-	public String getContainerName() {
-		return "connector, listenning : [" + listenPort + "]";
-	}
-
+	// Override form LifeCycleBase
 	@Override
 	protected void startInternal() throws Exception {
 		while(! server.isStop()) {
@@ -46,13 +44,34 @@ public final class Connector extends LifeCycleBase {
 				threadPool.execute(new Processor(clientSocket, server.getHost()) );
 			} catch (IOException e) {
 				e.printStackTrace();
+			} finally {
+				// 关闭资源, 否则 同一个端口reload JVM_Bind
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-		}		
+		}	
 	}
-
 	@Override
 	protected void stopInternal() throws Exception {
-		
+		Tools.awaitShutdown(threadPool);
+	}
+	
+	// 关闭线程池
+	public void shutdownThreadPool() {
+		threadPool.shutdown();
+	}
+	
+	// 获取当前对象的名字, 用于LogListener
+	public String getContainerName() {
+		return "connector, listenning : [" + listenPort + "]";
+	}
+	
+	// setter & getter
+	public int getPort() {
+		return listenPort;
 	}
 	
 }

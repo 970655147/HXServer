@@ -8,17 +8,16 @@ package com.hx.interf;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import com.hx.util.Tools;
 
+// LifeCycleBase
 public abstract class LifeCycleBase {
 	
 	// listeners
 	private List<LifeCycleListener> listeners = new ArrayList<>();
 	
-	// start, stop
+	// start, stop 处理事件  具体的业务处理留给子类
 	public void start() {
 		for(LifeCycleListener listener : listeners) {
 			fireEvent(listener, LifeCycleListener.BEFORE_START);
@@ -31,7 +30,6 @@ public abstract class LifeCycleBase {
 			e.printStackTrace();
 		}
 	}
-	
 	public void stop() {
 		try {
 			stopInternal();
@@ -69,7 +67,6 @@ public abstract class LifeCycleBase {
 	}
 	
 	// start, stop 的业务
-	public abstract String getContainerName() ;
 	protected abstract void startInternal() throws Exception;
 	protected abstract void stopInternal() throws Exception;
 	

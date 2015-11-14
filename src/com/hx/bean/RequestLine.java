@@ -14,6 +14,7 @@ import net.sf.json.JSONObject;
 import com.hx.util.Tools;
 
 // 请求行
+// GET /FileBrowser/fileBroseAction?path=C/Users HTTP/1.1
 public class RequestLine {
 
 	// 请求方法, 路径, 协议
@@ -28,6 +29,7 @@ public class RequestLine {
 	}
 	
 	// 解析请求行
+		// 以空格分割请求行, 新建一个RequestLine, 进行初始化, 解析查询字符串参数
 	public static RequestLine parse(String requestLine) {
 		if(Tools.isEmpty(requestLine) ) {
 			return null;
@@ -42,16 +44,24 @@ public class RequestLine {
 		rLine.method = splits[0];
 		rLine.path = getPath(splits[1] );
 		rLine.protocol = splits[2];
-		parseParams(splits[1], rLine.params);
+		parseParams(splits[1], rLine.params, false);
 		
 		return rLine;
 	}
 	
 	// 解析参数
-	private static void parseParams(String path, Map<String, String> params) {
-		int questionIdx = path.indexOf(Tools.QUESTION);
-		if(questionIdx < 0) {
-			return ;
+	// 对于get参数    => /FileBrowser/fileBroseAction?path=C/Users
+	// 对于post参数 => name=tyutyu&pwd=fghfghdfg
+	public static void parseParams(String path, Map<String, String> params, boolean isPost) {
+		int questionIdx = -1;
+		if(! isPost) {
+			questionIdx = path.indexOf(Tools.QUESTION);
+			if(questionIdx < 0) {
+				return ;
+			}
+		} else {
+			// for makes first route success !
+			questionIdx = -1;
 		}
 		
 		int lastAndIdx = questionIdx;
@@ -75,6 +85,7 @@ public class RequestLine {
 	}
 	
 	// 获取path
+	// '/FileBrowser/fileBroseAction?path=C/Users' => '/FileBrowser/fileBroseAction'
 	public static String getPath(String path) {
 		int questionIdx = path.indexOf(Tools.QUESTION);
 		if(questionIdx > 0) {
