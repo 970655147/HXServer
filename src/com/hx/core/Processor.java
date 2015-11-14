@@ -6,10 +6,9 @@
 
 package com.hx.core;
 
-import java.io.IOException;
 import java.net.Socket;
 
-import com.hx.ext.FileBroseServlet;
+import com.hx.util.Constants;
 import com.hx.util.Log;
 import com.hx.util.Tools;
 
@@ -20,17 +19,15 @@ public class Processor implements Runnable {
 	private Socket clientSocket;
 	protected Request req;
 	protected Response resp;
-	
-	// servlet 处理业务
-	private Servlet servlet = new FileBroseServlet();
+	private Host host;
 	
 	// 初始化
 	public Processor() {
-		super();
+		this(null, null);
 	}
-	public Processor(Socket clientSocket) {
-		this();
+	public Processor(Socket clientSocket, Host host) {
 		this.clientSocket = clientSocket;
+		this.host = host;
 		init();
 	}
 
@@ -43,6 +40,7 @@ public class Processor implements Runnable {
 			req.init();
 			resp.init();
 		} catch (Exception e) {
+			Tools.err(this, "error while init !");
 			e.printStackTrace();
 		}
 	}
@@ -54,33 +52,42 @@ public class Processor implements Runnable {
 	
 	// 处理业务
 	public void process() {
-		processInternal();
 		try {
+			processInternal();
 			clientSocket.close();
-			Log.horizon();
-		} catch (IOException e) {
+		} catch (Exception e) {
+			Tools.err(this, "error while process request or close socket !");
 			e.printStackTrace();
 		}
 	}
 	
 	// 具体的处理业务
-	public void processInternal() {
+	public void processInternal() throws Exception {
 		if(req.getRequestLine() == null ) {
 			Tools.log(this, "give up request : " + req.toString() + " cause of requestLine is : ' " + req.getRequestLineStr() + " ' !");
 			return ;
 		}
 		
-		if(Tools.equalsIgnoreCase(req.getMethod(), Request.GET) ) {
-			servlet.doGet(req, resp);
-		} else if(Tools.equalsIgnoreCase(req.getMethod(), Request.POST) ) {
-			servlet.doPost(req, resp);
-		} else if(Tools.equalsIgnoreCase(req.getMethod(), Request.PUT) ) {
-			servlet.doPut(req, resp);
-		} else if(Tools.equalsIgnoreCase(req.getMethod(), Request.DELETE) ) {
-			servlet.doDelete(req, resp);
- 		} else {
- 			throw new RuntimeException("have no this request method !");
- 		}
+		int contextSlashIdx = req.getPath().indexOf("/", 1);
+		if(contextSlashIdx < 0) {
+			Tools.log(this, "give up request : " + req.toString() + " cause of not specify webAppName !");
+			return ;			
+		}
+		
+		String contextName = req.getPath().substring(1,  contextSlashIdx);
+		String path = req.getPath().substring(contextSlashIdx+1);
+		String reqSourceSuffix = Tools.DOT + Tools.getFileName(Tools.getFileName(path, Tools.INV_SLASH), Tools.DOT).trim();
+		req.setAttribute(Constants.CONTEXT, contextName);
+		req.setAttribute(Constants.PATH, path);
+		
+		if(Constants.staticSourceSuffix.contains(reqSourceSuffix) ) {
+			StaticResourceLoader.load(host, req, resp);
+		} else {
+			ServletResourceLoader.load(host, req, resp);
+		}
+		
+		// 写出数据
+		resp.writeResponse();
 	}
 
 }

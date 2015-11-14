@@ -6,8 +6,10 @@
 
 package com.hx.interf;
 
+import com.hx.util.Tools;
+
 // 服务器的listener
-public interface ServerListener {
+public interface LifeCycleListener {
 
 	// 事件的类型
 	public static int BEFORE_START = 0;
@@ -16,5 +18,7 @@ public interface ServerListener {
 	// 相应的事件
 	public abstract void beforeStart();
 	public abstract void postStop();
+	// 适用于ContainerBase.addLifeCycleListenerForChilds
+	public abstract LifeCycleListener copy(String arg);
 	
 }

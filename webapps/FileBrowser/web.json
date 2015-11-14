@@ -1,0 +1,4 @@
+{
+	"fileBroseAction" : "com.hx.action.FileBroseServlet",
+	"helloWorldAction" : "com.hx.action.HelloWorldServlet"
+}

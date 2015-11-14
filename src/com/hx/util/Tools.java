@@ -23,7 +23,10 @@ import java.util.Set;
 
 import net.sf.json.JSONObject;
 
+import com.hx.core.Host;
 import com.hx.core.Request;
+import com.hx.core.Response;
+import com.hx.core.StaticResourceLoader;
 
 // 工具类
 public class Tools {
@@ -37,6 +40,8 @@ public class Tools {
 	public static final Character COMMON = ',';
 	public static final Character COLON = ':';
 	public static final Character SPACE = ' ';
+	public static final Character AND = '&';
+	public static final Character EQUAL = '=';
 	public static final Character TAB = '\t';
 	public static final Character CR = '\r';
 	public static final Character LF = '\n';
@@ -63,6 +68,15 @@ public class Tools {
 	public static final String TRANSFER_ENCODING = "Transfer-Encoding";
 	public static final String LAST_MODIFIED = "Last-Modified";
 	public static final String IF_MODIFIED_SINCE = "If-Modified-Since";
+	
+	// 后缀相关
+	public static String HTML = ".html";
+	public static String JAVA = ".java";
+	public static String TXT = ".txt";
+	public static String PNG = ".png";
+	public static String JPEG = ".jpeg";
+	public static String JS = ".js";
+	public static String MAP = ".map";
 	
 	// 如果字符串为一下字符串, 将其视为空字符串
 	static Set<String> emptyStrCondition = new HashSet<>();
@@ -115,6 +129,9 @@ public class Tools {
 	// 打印日志
 	public static void log(Object obj, Object content) {
 		Log.log(obj.getClass().getName() + " -> " + Tools.getNow() + " : "  + content.toString() );
+	}
+	public static void err(Object obj, Object content) {
+		Log.err(obj.getClass().getName() + " -> " + Tools.getNow() + " : "  + content.toString() );
 	}
 	
 	// 判断字符串是否为空[null, "", "null"]
@@ -170,10 +187,12 @@ public class Tools {
 				sb.append(Tools.COLON);				
 				sb.append(Tools.INV_SLASH);
 				path = sb.toString();
+			} else {
+				path = "/";
 			}
 		} else {
 			StringBuilder sb = new StringBuilder(webPath.length() );
-			sb.append(webPath.substring(1, diskNameIdx) );
+			sb.append(webPath.substring(0, diskNameIdx) );
 			sb.append(Tools.COLON);
 			sb.append(webPath.substring(diskNameIdx) );
 			if(sb.charAt(sb.length()-1) != Tools.INV_SLASH) {
@@ -206,9 +225,9 @@ public class Tools {
 		String webPath = getWebPathByFilePath(parent);
 		int endIdx = webPath.lastIndexOf(Tools.INV_SLASH, webPath.length()-2);
 		if(endIdx > 0) {
-			return webPath.substring(0, endIdx);
+			return webPath.substring(0, endIdx+1);
 		} else {
-			return "/";
+			return parent.charAt(0) + "/";
 		}
 	}	
 	
@@ -260,6 +279,45 @@ public class Tools {
 		sb.append(file.getName());
 		return sb.toString();
 	}
+	
+	// 获取指定路径的文件的文件, 通过sep分割的文件名     获取文件名
+	// 解析? 的位置, 是为了防止一下情况
+	public static String getFileName(String path, char sep) {
+		int start = path.lastIndexOf(sep) + 1;
+		
+//		http://webd.home.news.cn/1.gif?z=1&_wdxid=01002005057000300000000001110
+		int end = getSymAfterFileName(path, start+1);
+		if(end != -1) {
+			return path.substring(start, end);
+		} else {
+			return path.substring(start);
+		}
+	}
+	// 文件名后面可能出现的其他符号
+	static Set<Character> mayBeFileNameSeps = new HashSet<>();
+	static {
+		mayBeFileNameSeps.add(QUESTION);
+	}
+	// 获取文件名后面的可能出现的符合的最近的索引
+	private static int getSymAfterFileName(String path, int start) {
+		int min = -1;
+		for(int i=start; i<path.length(); i++) {
+			if(mayBeFileNameSeps.contains(path.charAt(i)) ) {
+				min = i;
+				break ;
+			}
+		}
+		
+		return min;
+	}
+	
+	// 404
+	public static void notFound404(Host host, Request req, Response resp) {
+		req.setAttribute(Constants.CONTEXT, Constants.staticSource);
+		req.setAttribute(Constants.PATH, Constants.source404);
+		StaticResourceLoader.load(host, req, resp);
+	}
+	
 	
 	
 }
