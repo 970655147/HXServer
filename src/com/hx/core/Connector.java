@@ -38,21 +38,21 @@ public final class Connector extends LifeCycleBase {
 	// Override form LifeCycleBase
 	@Override
 	protected void startInternal() throws Exception {
-		while(! server.isStop()) {
+		try {
+			while(! server.isStop()) {
+					Socket clientSocket = serverSocket.accept();
+					threadPool.execute(new Processor(clientSocket, server.getHost()) );
+			}	
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			// 关闭资源, 否则 同一个端口reload JVM_Bind
 			try {
-				Socket clientSocket = serverSocket.accept();
-				threadPool.execute(new Processor(clientSocket, server.getHost()) );
+				serverSocket.close();
 			} catch (IOException e) {
 				e.printStackTrace();
-			} finally {
-				// 关闭资源, 否则 同一个端口reload JVM_Bind
-				try {
-					serverSocket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
-		}	
+		}
 	}
 	@Override
 	protected void stopInternal() throws Exception {

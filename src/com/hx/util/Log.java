@@ -196,7 +196,7 @@ public class Log {
 		StringBuilder sb = new StringBuilder((arr.length + 1) << 2);
 		
 		for(int i=0; i<arr.length; i++) {
-			sb.append(arr[i]);
+			sb.append(String.valueOf((int) (arr[i])) );
 			sb.append("  ");
 		}
 		

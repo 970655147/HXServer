@@ -6,9 +6,7 @@
 
 package com.hx.core;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,18 +14,20 @@ import java.util.Map;
 import net.sf.json.JSONObject;
 
 import com.hx.bean.RequestLine;
+import com.hx.util.Constants;
 import com.hx.util.Tools;
 
 // 请求
 public class Request {
 
 	// 请求行, 请求头 , 请求行的字符串表示, 当前request中的属性 [服务器内部传递数据]
-	// 客户端输入流
+	// 客户端输入流, post请求体的长度 [不包含参数]
 	private RequestLine requestLine;
 	private Map<String, String> requestHeader;
 	private String requestLineStr;
 	private Map<String, String> attri;
 	private InputStream inputStream;
+	private long bodyCnt;
 	
 	// 常量
 	public final static String headerSep = Tools.COLON.toString();
@@ -78,13 +78,18 @@ public class Request {
 	public InputStream getInputStream() {
 		return inputStream;
 	}	
+	public long getBodyCnt() {
+		return bodyCnt;
+	}
 	
 	// 解析请求
 	// 解析请求行, 请求头
 		// 如果是post请求话 解析请求数据
+	// 2015.10.15  replace BufferedReader to InputStream to resolve requestHeader ! [BufferedReader with cache, so there maybe lost some byte[cached in BufferedInputStream] in socket.inputStream  ]
 	public static Request parse(Socket socket) throws Exception {
-		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()) );
+//		BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()) );
 		Request req = new Request();
+		req.inputStream = socket.getInputStream();
 
 		// ---------------- read post data----------------------
 		// refer : http://bbs.csdn.net/topics/310107460
@@ -106,7 +111,8 @@ public class Request {
 //		Log.horizon();
 		
 		// ---------------- business ----------------------
-		String line = br.readLine();
+//		String line = br.readLine();
+		String line = Tools.readLine(req.inputStream);
 		if(! Tools.isEmpty(line) ) {
 			req.requestLineStr = line;
 			req.requestLine = RequestLine.parse(line);
@@ -115,30 +121,41 @@ public class Request {
 			return null;
 		}
 		
-		while(((line = br.readLine()) != null) && (! Tools.isEmpty(line)) ) {
+		while(((line = Tools.readLine(req.inputStream)) != null) && (! Tools.isEmpty(line)) ) {
 			int sepIdx = line.indexOf(headerSep);
 			if(sepIdx > 0) {
 				req.requestHeader.put(line.substring(0, sepIdx).trim(), line.substring(sepIdx+1).trim() );
 			}
-		}	
+		}
 		// parse posted data !
+			// 如果是post请求, 并且不为表单文件请求的话, 解析参数
+			// 如果是表单文件, 并且又有参数的话, 以后有空再思考思考吧
 		if(Request.POST.equals(req.getMethod()) ) {
 			int bodyCnt = 0;
 			if(req.requestHeader.get(Tools.CONTENT_LENGTH) != null) {
 				bodyCnt = Integer.parseInt(req.requestHeader.get(Tools.CONTENT_LENGTH) );
 			}
-			byte[] buff = new byte[bodyCnt];
-			// doesn't work !
-	//		socketIs.read(buff, 0, bodyCnt);
-			// it works !
-			for(int i=0; i<bodyCnt; i++) {
-				buff[i] = (byte) br.read();
+			
+			req.bodyCnt = bodyCnt;
+			if(! req.getHeader(Tools.CONTENT_TYPE).contains(Constants.formPostFileKeyWords) ) {
+				// ---------- read one char per iterate ----------
+//				byte[] buff = new byte[bodyCnt];
+				// doesn't work !
+//				socketIs.read(buff, 0, bodyCnt);
+				// it works !
+//				for(int i=0; i<bodyCnt; i++) {
+//					buff[i] = (byte) req.inputStream.read();
+//				}
+//				String postedData = new String(buff, 0, bodyCnt);
+				
+				// ---------- readLine ----------
+				String postedData = Tools.readLine(req.inputStream, req.bodyCnt);
+				req.bodyCnt = bodyCnt - postedData.length();
+				RequestLine.parseParams(postedData, req.requestLine.params, true);
 			}
-			String postedData = new String(buff, 0, bodyCnt);
-			req.requestLine.parseParams(postedData, req.requestLine.params, true);
+			
 		}
-		
-		req.inputStream = socket.getInputStream();
+
 		return req;
 	}
 	

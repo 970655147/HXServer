@@ -11,7 +11,6 @@ import java.util.Scanner;
 import com.hx.interf.LifeCycleBase;
 import com.hx.startUp.BootStrap;
 import com.hx.util.Constants;
-import com.hx.util.Log;
 import com.hx.util.Tools;
 
 // 服务器
@@ -97,6 +96,9 @@ public final class Server extends LifeCycleBase {
 	// 获取当前对象的名字, 用于LogListener
 	public String getContainerName() {
 		return "server";
+	}
+	public String getServerName() {
+		return Constants.SERVER_NAME;
 	}
 	
 	// 输入会阻塞

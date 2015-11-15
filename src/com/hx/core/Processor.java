@@ -29,7 +29,6 @@ public class Processor implements Runnable {
 	public Processor(Socket clientSocket, Host host) {
 		this.clientSocket = clientSocket;
 		this.host = host;
-		init();
 	}
 
 	// 初始化
@@ -39,8 +38,12 @@ public class Processor implements Runnable {
 			req = Request.parse(clientSocket);
 			resp = Response.parse(clientSocket);
 			
-			req.init();
-			resp.init();
+			if(req != null) {
+				req.init();
+			}
+			if(resp != null) {
+				resp.init();
+			}
 		} catch (Exception e) {
 			Tools.err(this, "error while init !");
 			e.printStackTrace();
@@ -48,8 +51,10 @@ public class Processor implements Runnable {
 	}
 	
 	// Override form Runnable	
+	// 2015.10.15  将init放置到run方法中, 避免阻塞维护Connector的线程 [而导致不能接受其他request]
 	@Override
 	public void run() {
+		init();
 		process();
 	}
 	

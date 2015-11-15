@@ -36,6 +36,7 @@ public class Response {
 		statusLine = new StatusLine("HTTP/1.1", "200", "OK");
 		responseHeader = new LinkedHashMap<>();
 		responseHeader.put("Content-Type", "text/html; charset=utf-8");
+		responseHeader.put("Server", Constants.SERVER_NAME);
 		buff = new ByteArrayOutputStream(Constants.RESP_BUFF_CAP);
 		out = new PrintWriter(buff);
 	}

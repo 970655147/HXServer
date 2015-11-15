@@ -333,6 +333,7 @@ public class Tools {
 			bos = new BufferedOutputStream(os);
 			int len = 0;
 			byte[] buf = new byte[Constants.BUFF_SIZE];
+			// 如果读取到的字节数据不为BUFF_SIZE, 视为读取到最后一批数据了
 			while((len = bis.read(buf)) != -1) {
 				bos.write(buf, 0, len);
 			}
@@ -357,6 +358,22 @@ public class Tools {
 			}
 		}
 	}
+	
+	// 从inputStream中读取一行数据 [\n作为分割, 丢弃\n]
+	public static String readLine(InputStream is, long maxRead) throws Exception {
+		StringBuilder sb = new StringBuilder();
+		char b = 1;
+		// place length judge first cause of is.read maybe blocking
+		while ((sb.length() < maxRead) && ((b = (char) is.read()) != 10) ) {
+			sb.append(b);
+		} 
+		
+		return sb.toString();
+	}
+	public static String readLine(InputStream is) throws Exception {
+		return readLine(is, Long.MAX_VALUE);
+	}
+	
 	
 }
 

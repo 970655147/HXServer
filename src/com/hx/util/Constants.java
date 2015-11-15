@@ -36,6 +36,8 @@ public class Constants {
 	public final static String favicon = "icons/favicon.ico";
 	public final static String faviconPath = "/favicon.ico";
 	public static int PORT = 8888;
+	public final static String formPostFileKeyWords = "multipart/form-data";
+	public final static String SERVER_NAME = "HX'sServer";
 	
 	// 常量
 	// host, context, wrapper, 以及顶级容器
