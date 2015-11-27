@@ -62,7 +62,7 @@ public class FileBroseServlet extends HttpServlet {
 						respSb.append("<br />");
 					}
 		 		} else {
-		 			if(handleble.contains(Tools.getFileName(file.getName(), Tools.DOT)) ) {
+		 			if(handleble.contains(Tools.DOT + Tools.getFileName(file.getName(), Tools.DOT)) ) {
 			 			try {
 							respSb.append(Tools.getContent(file) );
 						} catch (IOException e) {

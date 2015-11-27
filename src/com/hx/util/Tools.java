@@ -220,6 +220,9 @@ public class Tools {
 	// 解析? 的位置, 是为了防止一下情况
 	public static String getFileName(String path, char sep) {
 		int start = path.lastIndexOf(sep) + 1;
+		if(start == -1) {
+			return EMPTY_STR;
+		}
 		
 //		http://webd.home.news.cn/1.gif?z=1&_wdxid=01002005057000300000000001110
 		int end = getSymAfterFileName(path, start+1);
@@ -364,14 +367,23 @@ public class Tools {
 		StringBuilder sb = new StringBuilder();
 		char b = 1;
 		// place length judge first cause of is.read maybe blocking
+//		try {
 		while ((sb.length() < maxRead) && ((b = (char) is.read()) != 10) ) {
 			sb.append(b);
 		} 
+//		} catch (Throwable e) {
+//			Log.log(sb.substring(0, 1000) );
+//			Log.log(sb.length() );
+//		}
 		
 		return sb.toString();
 	}
+	// 默认定义一行最大的字符数为1000 [不知道为什么存在一个不明的请求, 很奇怪]
+		// 上面的readLine打印出异常如下
+		// sb.subString(0, 1000) => ???????????????????????????????????
+		// sb.length = 37748734
 	public static String readLine(InputStream is) throws Exception {
-		return readLine(is, Long.MAX_VALUE);
+		return readLine(is, 1000);
 	}
 	
 	

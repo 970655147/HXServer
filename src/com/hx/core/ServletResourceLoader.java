@@ -20,6 +20,7 @@ public class ServletResourceLoader {
 			Tools.notFound404(host, req, resp);
 			return ;
 		}
+		
 		ActionWrapper action = (ActionWrapper) context.getChild(req.getAttribute(Constants.PATH) );
 		if(action == null) {
 			Tools.notFound404(host, req, resp);

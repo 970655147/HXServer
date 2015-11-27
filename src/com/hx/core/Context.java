@@ -95,14 +95,20 @@ public class Context extends ContainerBase {
 	// Override form LifeCycleBase
 	@Override
 	public void startInternal() {
-		for(Entry<String, ContainerBase> entry : childs.entrySet()) {
+		for(Entry<String, ContainerBase> entry : childs.entrySet() ) {
 			entry.getValue().start();
+		}
+		for(Entry<String, Filter> entry : filters.entrySet() ) {
+			entry.getValue().onCreate();
 		}
 	}
 	@Override
 	public void stopInternal() {
-		for(Entry<String, ContainerBase> entry : childs.entrySet()) {
+		for(Entry<String, ContainerBase> entry : childs.entrySet() ) {
 			entry.getValue().stop();
+		}
+		for(Entry<String, Filter> entry : filters.entrySet() ) {
+			entry.getValue().onDestroy();
 		}
 	}
 	

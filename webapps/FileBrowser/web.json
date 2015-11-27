@@ -17,6 +17,6 @@
 	
 	"fileUploadAction" : {
 		"classPath" : "com.hx.action.FileUploadServlet"
-	},
+	}
 
 }

@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.Socket;
 
 import com.hx.util.Constants;
+import com.hx.util.Log;
 import com.hx.util.Tools;
 
 // 处理浏览器发送来的请求[dispatch]
@@ -94,7 +95,7 @@ public class Processor implements Runnable {
 			// 否则   加载相应的servlet处理该请求
 	public void processInternal() throws Exception {
 		if(req == null ) {
-			Tools.log(this, "give up request : " + req.toString() + " cause of not good request format !");
+			Tools.log(this, "give up request : cause of not good request format !");
 			return ;
 		}
 		
@@ -121,7 +122,12 @@ public class Processor implements Runnable {
 		// common business 
 		String contextName = req.getPath().substring(1,  contextSlashIdx);
 		String path = req.getPath().substring(contextSlashIdx+1);
-		String reqSourceSuffix = Tools.DOT + Tools.getFileName(Tools.getFileName(path, Tools.INV_SLASH), Tools.DOT).trim();
+		int questionIdx = req.getPath().indexOf("?");
+		String reqSourceSuffix = null, realActionPath = path;
+		if(questionIdx > 0) {
+			realActionPath = path.substring(0, questionIdx);
+		}
+		reqSourceSuffix = Tools.DOT + Tools.getFileName(Tools.getFileName(path, Tools.INV_SLASH), Tools.DOT).trim();
 		req.setAttribute(Constants.CONTEXT, contextName);
 		req.setAttribute(Constants.PATH, path);
 		
