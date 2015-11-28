@@ -155,13 +155,19 @@ public class Tools {
 	// 获取给定的输入流中的字符内容
 	public static String getContent(InputStream is, String charset) throws IOException {
 		StringBuilder sb = new StringBuilder(is.available() );
-		BufferedReader br = new BufferedReader(new InputStreamReader(is, charset) );
+		BufferedReader br = null;
 
-		String line = null;
-		while((line = br.readLine()) != null) {
-			sb.append(line );
+		try {
+			br = new BufferedReader(new InputStreamReader(is, charset) );
+			String line = null;
+			while((line = br.readLine()) != null) {
+				sb.append(line );
+			}
+		} finally {
+			if(br != null) {
+				br.close();
+			}
 		}
-		br.close();
 		
 		return sb.toString();
 	}
@@ -268,9 +274,11 @@ public class Tools {
             urls[0] = new URL(null, repository, streamHandler); 
             loader = new URLClassLoader(urls); 
         } catch (IOException e) { 
-        	Tools.err(Tools.class, "error while init servlet !");
+        	Tools.err(Tools.class, "error while init 'servlet' / 'filter' / '..' !");
             e.printStackTrace();
-        } 
+        }  finally {
+
+        }
         
         Object ins = null;
         try {
@@ -279,6 +287,14 @@ public class Tools {
 		} catch (Exception e) {
 			Tools.err(Tools.class, "error while instance servlet !");
 			e.printStackTrace();
+		} finally {
+        	if(loader != null) {
+        		try {
+					loader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+        	}
 		}
         
         return ins;
@@ -305,14 +321,19 @@ public class Tools {
 	// 访问对应的url
 	// 访问一下Connection.inputStream  才能发出请求 !
 	public static void visit(String urlStr) {
+		HttpURLConnection con = null;
 		try {
 			URL url = new URL(urlStr);
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			con = (HttpURLConnection) url.openConnection();
 			// 访问一下Connection.inputStream  才能发出请求
 			String respContent = Tools.getContent(con.getInputStream() );
 		} catch (IOException e) {
 			Tools.log(Tools.class, "error while visit : " + urlStr);
 			e.printStackTrace();
+		} finally {
+			if(con != null) {
+				con.disconnect();
+			}
 		}
 	}
 	
@@ -361,6 +382,9 @@ public class Tools {
 			}
 		}
 	}
+	public static void copy(InputStream is, OutputStream os) {
+		copy(is, os, true);
+	}	
 	
 	// 从inputStream中读取一行数据 [\n作为分割, 丢弃\n]
 	public static String readLine(InputStream is, long maxRead) throws Exception {
