@@ -25,7 +25,11 @@ public class ActionWrapper extends ContainerBase {
 	public ActionWrapper(ContainerBase parent, String contextPath, String servletName) {
 		this.parent = parent;
 		actionPath = contextPath + Tools.INV_SLASH + servletName.replace(Tools.DOT, Tools.INV_SLASH);
-		servlet = (Servlet) Tools.getInstance(contextPath, servletName);
+		try {
+			servlet = (Servlet) Tools.newInstance(contextPath, servletName);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		init(servletName);
 	}

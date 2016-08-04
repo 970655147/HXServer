@@ -17,8 +17,8 @@ import com.hx.util.Tools;
 public final class Server extends LifeCycleBase {
 
 	// 是否启动服务器, 是否关闭服务器
-	private boolean isStart;
-	private boolean isStop;
+	private volatile boolean isStart;
+	private volatile boolean isStop;
 	
 	// 服务器的listener
 	private Connector connector;

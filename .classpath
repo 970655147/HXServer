@@ -2,14 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="webapps/FileBrowser"/>
-	<classpathentry kind="lib" path="D:/Assist/json/json-lib-2.2.3-jdk15.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/commons-beanutils.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/commons-collections-3.2.1.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/commons-lang-2.2.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/commons-logging.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/ezmorph-1.0.6.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/json/json.jar"/>
-	<classpathentry kind="lib" path="D:/Assist/sourceForge/image4j.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/commons-beanutils.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/commons-collections-3.2.1.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/commons-lang-2.2.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/commons-logging.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/ezmorph-1.0.6.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/json.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/json/json-lib-2.2.3-jdk15.jar"/>
+	<classpathentry kind="lib" path="D:/Assist/jar/sourceForge/image4j.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

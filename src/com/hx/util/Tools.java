@@ -21,6 +21,7 @@ import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -264,7 +265,7 @@ public class Tools {
 	}
 	
 	// 创建一个(contextPath, path), 对应对象的实例
-	public static Object getInstance(String contextPath, String path) {
+	public static Object newInstance(String contextPath, String path) throws Exception {
         URLClassLoader loader = null; 
         try { 
             // create a URLClassLoader 
@@ -275,7 +276,7 @@ public class Tools {
             loader = new URLClassLoader(urls); 
         } catch (IOException e) { 
         	Tools.err(Tools.class, "error while init 'servlet' / 'filter' / '..' !");
-            e.printStackTrace();
+            throw e;
         }  finally {
 
         }
@@ -286,7 +287,7 @@ public class Tools {
 			ins = servletClass.getConstructor().newInstance();
 		} catch (Exception e) {
 			Tools.err(Tools.class, "error while instance servlet !");
-			e.printStackTrace();
+			throw e;
 		} finally {
         	if(loader != null) {
         		try {
@@ -298,6 +299,43 @@ public class Tools {
 		}
         
         return ins;
+	}
+	// add at 2016.05.01
+	// 缓存
+	private static Map<ObjPath, Object> pathToObj = new HashMap<>();
+	// 获取给定的contextPath的给定的路径对应的对象
+	public static Object getInstance(String contextPath, String path) throws Exception {
+		ObjPath objPath = new ObjPath(contextPath, path);
+		Object fromCache = pathToObj.get(objPath );
+		if(fromCache != null) {
+			return fromCache;
+		}
+		fromCache = newInstance(contextPath, path);
+		pathToObj.put(objPath, fromCache);
+		return fromCache;
+	}
+	static class ObjPath {
+		// contextPath, 以及相对于contextPath的相对路径
+		public String contextPath;
+		public String path;
+		// 初始化
+		public ObjPath(String contextPath, String path) {
+			this.contextPath = contextPath;
+			this.path = path;
+		}
+		// for HashMap
+		@Override
+		public int hashCode() {
+			return contextPath.hashCode() * 31 + path.hashCode();
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if(! (obj instanceof ObjPath) ) {
+				return false;
+			}
+			ObjPath other = (ObjPath) obj;
+			return contextPath.equals(other.contextPath) && path.equals(other.path);
+		}
 	}
 	
 	// 等待所有任务的结束  然后shutdown线程池

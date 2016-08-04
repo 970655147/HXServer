@@ -4,7 +4,11 @@
 	},
 	
 	"helloWorldAction" : {
-		"classPath" : "com.hx.action.HelloWorldServlet"
+		"classPath" : "com.hx.action.HelloWorldServlet",
+		"filters" : [
+			"com.hx.ext.IpFilter",
+			"com.hx.ext.LogFilter"
+		]
 	},
 	
 	"calcAction" : {
