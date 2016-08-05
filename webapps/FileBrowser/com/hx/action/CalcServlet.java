@@ -9,10 +9,10 @@ package com.hx.action;
 import java.io.PrintWriter;
 import java.net.URLDecoder;
 
-import com.hx.core.HttpServlet;
-import com.hx.core.Request;
-import com.hx.core.Response;
-import com.hx.util.Tools;
+import com.hx.server.core.HttpServlet;
+import com.hx.server.core.Request;
+import com.hx.server.core.Response;
+import com.hx.server.util.Tools;
 
 // ¼ÆËãÆ÷Servlet
 public class CalcServlet extends HttpServlet {

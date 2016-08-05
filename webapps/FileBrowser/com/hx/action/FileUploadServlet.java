@@ -13,11 +13,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.hx.core.HttpServlet;
-import com.hx.core.Request;
-import com.hx.core.Response;
-import com.hx.util.Log;
-import com.hx.util.Tools;
+import com.hx.server.core.HttpServlet;
+import com.hx.server.core.Request;
+import com.hx.server.core.Response;
+import com.hx.server.util.Log;
+import com.hx.server.util.Tools;
 
 // 上传文件的servlet
 // 失败了! [有空再做做吧]		2015.10.14
